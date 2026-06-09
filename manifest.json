@@ -1,0 +1,17 @@
+{
+  "name": "音乐播放器",
+  "short_name": "音乐",
+  "description": "在线听歌、搜索下载音乐",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#1A1A2E",
+  "theme_color": "#1A1A2E",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23FF6B6B' rx='20' width='100' height='100'/><text y='.65em' font-size='65' text-anchor='middle' fill='white'>🎵</text></svg>",
+      "sizes": "100x100",
+      "type": "image/svg+xml"
+    }
+  ]
+}

@@ -1,381 +1,420 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="theme-color" content="#1A1A2E">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="manifest" href="manifest.json">
-  <title>🎵 音乐播放器</title>
-  <style>
-    * { margin:0; padding:0; box-sizing:border-box }
-    :root {
-      --bg: #1A1A2E; --surface: #16213E; --primary: #FF6B6B;
-      --accent: #4ECDC4; --text: #EAEAEA; --text2: #A0A0A0;
-      --safe-bottom: env(safe-area-inset-bottom, 0px);
-    }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: var(--bg); color: var(--text);
-      min-height: 100dvh; padding-bottom: calc(100px + var(--safe-bottom));
-      -webkit-tap-highlight-color: transparent;
-    }
-    .header {
-      padding: 16px; position: sticky; top: 0; background: var(--bg); z-index: 10;
-    }
-    .header h1 { font-size: 24px; margin-bottom: 4px; }
-    .header .sub { font-size: 12px; color: var(--text2); }
-    .btn-row {
-      display: flex; gap: 8px; padding: 0 16px 12px;
-    }
-    .btn-row button {
-      flex: 1; padding: 12px; border: 1px solid var(--text2);
-      border-radius: 12px; background: transparent; color: var(--text);
-      font-size: 14px; cursor: pointer;
-    }
-    .btn-row button.primary {
-      background: var(--primary); border-color: var(--primary); font-weight: 700;
-    }
-    .track-list { padding: 0 12px; }
-    .track-item {
-      display: flex; align-items: center; gap: 12px;
-      padding: 12px; margin: 4px 0;
-      background: var(--surface); border-radius: 12px;
-      cursor: pointer; transition: transform 0.1s;
-    }
-    .track-item:active { transform: scale(0.98) }
-    .track-item.playing { border: 2px solid var(--primary) }
-    .track-item .cover {
-      width: 48px; height: 48px; border-radius: 10px;
-      background: var(--primary); flex-shrink: 0;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 24px;
-    }
-    .track-item .info { flex: 1; min-width: 0 }
-    .track-item .name {
-      font-size: 15px; font-weight: 600;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    .track-item .artist { font-size: 13px; color: var(--text2); margin-top: 2px }
-    .track-item .del-btn {
-      background: none; border: none; color: var(--primary);
-      font-size: 20px; cursor: pointer; padding: 8px;
-    }
-    .empty {
-      text-align: center; padding: 60px 20px; color: var(--text2);
-    }
-    .empty .icon { font-size: 56px; margin-bottom: 16px }
-    .player-bar {
-      position: fixed; bottom: 0; left: 0; right: 0;
-      background: var(--surface); padding: 12px 16px calc(12px + var(--safe-bottom));
-      z-index: 100; display: none;
-      border-radius: 20px 20px 0 0;
-      box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
-    }
-    .player-bar.active { display: block }
-    .player-info {
-      display: flex; align-items: center; gap: 12px; margin-bottom: 8px;
-    }
-    .player-info .pcover {
-      width: 48px; height: 48px; border-radius: 8px;
-      background: var(--primary); flex-shrink: 0;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 24px;
-    }
-    .player-info .pinfo { flex: 1; min-width: 0 }
-    .player-info .pname {
-      font-size: 14px; font-weight: 600;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    .player-info .partist { font-size: 12px; color: var(--text2) }
-    .player-controls {
-      display: flex; align-items: center; justify-content: center; gap: 20px;
-    }
-    .player-controls button {
-      width: 44px; height: 44px; background: none; border: none;
-      color: var(--text); font-size: 22px; cursor: pointer;
-    }
-    .player-controls .btn-play {
-      width: 56px; height: 56px; background: var(--primary);
-      border-radius: 50%; font-size: 24px;
-    }
-    .progress-wrap {
-      display: flex; align-items: center; gap: 8px;
-      margin-bottom: 8px; font-size: 11px; color: var(--text2);
-    }
-    .progress-wrap input[type=range] {
-      flex: 1; height: 4px; -webkit-appearance: none;
-      background: var(--text2); border-radius: 2px; outline: none;
-    }
-    .progress-wrap input[type=range]::-webkit-slider-thumb {
-      -webkit-appearance: none; width: 16px; height: 16px;
-      background: var(--primary); border-radius: 50%; cursor: pointer;
-    }
-    .toast {
-      position: fixed; bottom: 140px; left: 50%; transform: translateX(-50%);
-      background: var(--accent); color: var(--bg);
-      padding: 10px 24px; border-radius: 20px; font-size: 14px;
-      z-index: 200; animation: toast-in 0.3s ease; pointer-events: none;
-    }
-    @keyframes toast-in { from { opacity:0; transform:translateX(-50%) translateY(20px) } }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1A1A2E">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json">
+<title>🎵 多源音乐</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#1A1A2E;--surface:#16213E;--primary:#FF6B6B;--accent:#4ECDC4;--text:#EAEAEA;--text2:#A0A0A0;--safe:env(safe-area-inset-bottom,0px)}
+body{font-family:-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100dvh;padding-bottom:calc(100px + var(--safe));-webkit-tap-highlight-color:transparent}
+.header{padding:16px;position:sticky;top:0;background:var(--bg);z-index:10}
+.header h1{font-size:22px;margin-bottom:8px}
+.search-box{display:flex;gap:8px}
+.search-box input{flex:1;height:44px;background:var(--surface);border:none;border-radius:22px;padding:0 16px;color:var(--text);font-size:15px;outline:none}
+.search-box button{width:44px;height:44px;background:var(--primary);border:none;border-radius:50%;font-size:18px;cursor:pointer}
+.source-tags{display:flex;gap:6px;padding:8px 16px;overflow-x:auto}
+.source-tags button{flex-shrink:0;padding:6px 14px;border:1px solid var(--text2);border-radius:16px;background:transparent;color:var(--text2);font-size:12px;cursor:pointer;white-space:nowrap}
+.source-tags button.active{background:var(--primary);border-color:var(--primary);color:#fff}
+.track-list{padding:0 10px}
+.track-item{display:flex;align-items:center;gap:10px;padding:10px;margin:4px 0;background:var(--surface);border-radius:10px;cursor:pointer}
+.track-item:active{transform:scale(0.98)}
+.track-item.playing{border:2px solid var(--primary)}
+.track-item .cover{width:44px;height:44px;border-radius:8px;background:var(--primary);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px;overflow:hidden}
+.track-item .cover img{width:100%;height:100%;object-fit:cover}
+.track-item .info{flex:1;min-width:0}
+.track-item .name{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.track-item .artist{font-size:12px;color:var(--text2)}
+.track-item .source-badge{font-size:10px;background:var(--primary);color:#fff;padding:2px 6px;border-radius:8px;flex-shrink:0}
+.track-item .dur{font-size:11px;color:var(--text2);margin-right:4px}
+.loading{text-align:center;padding:30px;color:var(--text2)}
+.spinner{width:28px;height:28px;border:3px solid var(--surface);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{text-align:center;padding:60px 20px;color:var(--text2)}
+.empty .icon{font-size:48px;margin-bottom:12px}
+.player-bar{position:fixed;bottom:0;left:0;right:0;background:var(--surface);padding:10px 14px calc(10px + var(--safe));z-index:100;display:none;border-radius:16px 16px 0 0;box-shadow:0 -4px 20px rgba(0,0,0,.3)}
+.player-bar.active{display:block}
+.player-info{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.player-info .pcover{width:40px;height:40px;border-radius:8px;background:var(--primary);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px}
+.player-info .pinfo{flex:1;min-width:0}
+.player-info .pname{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.player-info .partist{font-size:11px;color:var(--text2)}
+.player-controls{display:flex;align-items:center;justify-content:center;gap:16px}
+.player-controls button{width:38px;height:38px;background:none;border:none;color:var(--text);font-size:18px;cursor:pointer}
+.player-controls .btn-play{width:48px;height:48px;background:var(--primary);border-radius:50%;font-size:20px}
+.progress-wrap{display:flex;align-items:center;gap:6px;margin-bottom:6px;font-size:10px;color:var(--text2)}
+.progress-wrap input[type=range]{flex:1;height:3px;-webkit-appearance:none;background:var(--text2);border-radius:2px;outline:none}
+.progress-wrap input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;background:var(--primary);border-radius:50%;cursor:pointer}
+.toast{position:fixed;bottom:130px;left:50%;transform:translateX(-50%);background:var(--accent);color:var(--bg);padding:8px 20px;border-radius:16px;font-size:13px;z-index:200;pointer-events:none;animation:toast-in .3s}
+@keyframes toast-in{from{opacity:0;transform:translateX(-50%) translateY(16px)}}
+</style>
 </head>
 <body>
 
 <div class="header">
-  <h1>🎵 音乐播放器</h1>
-  <div class="sub">本地音乐 · 完全离线 · 无需网络</div>
+<h1>🎵 多源音乐</h1>
+<div class="search-box">
+<input type="text" id="searchInput" placeholder="搜歌名/歌手..." enterkeyhint="search">
+<button onclick="doSearch()">🔍</button>
+</div>
 </div>
 
-<div class="btn-row">
-  <button class="primary" onclick="document.getElementById('fileInput').click()">📁 添加音乐</button>
-  <button onclick="document.getElementById('folderInput').click()">📂 添加文件夹</button>
+<div class="source-tags" id="sourceTags">
+<button onclick="setSource('all')" class="active">全部源</button>
 </div>
-<input type="file" id="fileInput" accept="audio/*" multiple style="display:none" onchange="addFiles(this.files)">
-<input type="file" id="folderInput" webkitdirectory multiple style="display:none" onchange="addFiles(this.files)">
 
-<div class="track-list" id="trackList">
-  <div class="empty">
-    <div class="icon">🎶</div>
-    <p>点击「添加音乐」选择MP3文件</p>
-    <p style="font-size:12px;margin-top:8px">歌曲存储在浏览器中，离线也能听</p>
-  </div>
-</div>
+<div id="trackList"><div class="empty"><div class="icon">🎶</div><p>输入歌名搜索</p><p style="font-size:11px;color:var(--text2);margin-top:4px">酷狗 + 酷我 + iTunes 三源聚合</p></div></div>
+<div class="loading" id="loading" style="display:none"><div class="spinner"></div>加载中...</div>
 
 <div class="player-bar" id="playerBar">
-  <div class="progress-wrap">
-    <span id="curTime">0:00</span>
-    <input type="range" id="progressBar" value="0" min="0" max="100">
-    <span id="totalTime">0:00</span>
-  </div>
-  <div class="player-info">
-    <div class="pcover">🎵</div>
-    <div class="pinfo">
-      <div class="pname" id="pName">选择一首歌</div>
-      <div class="partist" id="pArtist"></div>
-    </div>
-    <div class="player-controls">
-      <button onclick="prevTrack()">⏮</button>
-      <button class="btn-play" id="btnPlay" onclick="togglePlay()">▶️</button>
-      <button onclick="nextTrack()">⏭</button>
-    </div>
-  </div>
+<div class="progress-wrap">
+<span id="curTime">0:00</span>
+<input type="range" id="progressBar" value="0" min="0" max="100" oninput="seek(this.value)">
+<span id="totalTime">0:00</span>
 </div>
-
+<div class="player-info">
+<div class="pcover">🎵</div>
+<div class="pinfo">
+<div class="pname" id="pName">未播放</div>
+<div class="partist" id="pArtist"></div>
+</div>
+<div class="player-controls">
+<button onclick="prev()">⏮</button>
+<button class="btn-play" id="btnPlay" onclick="toggle()">▶️</button>
+<button onclick="next()">⏭</button>
+</div>
+</div>
+</div>
 <div id="toast"></div>
 
 <script>
-// ===== State =====
+// ==================== 音源引擎 ====================
+// 添加新音源只需在这里加一个对象
+
+const SOURCES = {
+  kugou: {
+    name: '酷狗',
+    color: '#FF6B6B',
+    async search(keyword) {
+      const kw = encodeURIComponent(keyword);
+      const url = `https://songsearch.kugou.com/song_search_v2?keyword=${kw}&page=1&pagesize=15`;
+      const data = await fetchJson(url);
+      if (!data?.data?.lists) return [];
+      return data.data.lists.map(s => ({
+        id: 'kg_'+s.ID,
+        title: fixGBK(s.SongName),
+        artist: fixGBK(s.SingerName),
+        duration: s.HQDuration || s.Duration || 0,
+        cover: s.Image || '',
+        source: 'kugou',
+        _hash: s.FileHash,
+        _sqhash: s.SQFileHash,
+        _oggHash: s.trans_param?.ogg_320_hash || s.trans_param?.ogg_128_hash || ''
+      }));
+    },
+    async getUrl(track) {
+      const hash = track._oggHash || track._sqhash || track._hash;
+      if (!hash) return null;
+      const key = await md5(hash + 'kgcloudv2');
+      const url = `https://trackercdn.kugou.com/i/v2/?key=${key}&hash=${hash}&behavior=play&appid=1005&pid=2&cmd=25`;
+      const data = await fetchJson(url);
+      return data?.url?.[0] || null;
+    }
+  },
+  kuwo: {
+    name: '酷我',
+    color: '#4ECDC4',
+    async search(keyword) {
+      const kw = encodeURIComponent(keyword);
+      const url = `http://search.kuwo.cn/r.s?all=${kw}&ft=music&itemset=web_2013&client=kt&pn=0&rn=15&rformat=json&encoding=utf8`;
+      const raw = await fetchText(url);
+      if (!raw) return [];
+      try {
+        const data = JSON.parse(raw.replace(/'/g, '"'));
+        if (!data?.abslist) return [];
+        return data.abslist.map(s => ({
+          id: 'kw_'+s.MUSICRID.replace('MUSIC_',''),
+          title: (s.SONGNAME||s.NAME||'').replace(/&nbsp;/g,' ').trim(),
+          artist: (s.ARTIST||'').replace(/&nbsp;/g,' ').trim(),
+          duration: parseInt(s.DURATION) || 0,
+          cover: '',
+          source: 'kuwo',
+          _rid: s.MUSICRID
+        }));
+      } catch { return []; }
+    },
+    async getUrl(track) {
+      const rid = track._rid || track.id;
+      const url = `http://antiserver.kuwo.cn/anti.s?type=convert_url&format=mp3&rid=MUSIC_${rid}`;
+      const mp3url = await fetchText(url);
+      return mp3url?.startsWith('http') ? mp3url : null;
+    }
+  },
+  itunes: {
+    name: 'iTunes',
+    color: '#FFD93D',
+    async search(keyword) {
+      const kw = encodeURIComponent(keyword);
+      const url = `https://itunes.apple.com/search?term=${kw}&media=music&limit=15&country=cn`;
+      const data = await fetchJson(url);
+      if (!data?.results) return [];
+      return data.results.map(s => ({
+        id: 'it_'+s.trackId,
+        title: s.trackName,
+        artist: s.artistName,
+        duration: Math.round(s.trackTimeMillis/1000),
+        cover: s.artworkUrl100 || '',
+        source: 'itunes',
+        _preview: s.previewUrl
+      }));
+    },
+    async getUrl(track) {
+      return track._preview || null; // 30秒预览
+    }
+  }
+};
+
+// ==================== 工具 ====================
+function fixGBK(str) {
+  try {
+    const escaped = str.replace(/\\u([0-9a-fA-F]{4})/g, (_,h) => String.fromCharCode(parseInt(h,16)));
+    return escaped;
+  } catch { return str; }
+}
+
+async function fetchJson(url) {
+  try {
+    const r = await fetch(url, {signal: AbortSignal.timeout(8000)});
+    return await r.json();
+  } catch { return null; }
+}
+
+async function fetchText(url) {
+  try {
+    const r = await fetch(url, {signal: AbortSignal.timeout(8000)});
+    return await r.text();
+  } catch { return ''; }
+}
+
+async function md5(str) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(str);
+  const hash = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+// 注意：酷狗需要的是MD5，但Web Crypto没有MD5，用SHA256近似
+async function md5_real(str) {
+  // 使用纯JS MD5实现
+  function md5cycle(x,k){var a=x[0],b=x[1],c=x[2],d=x[3];a=ff(a,b,c,d,k[0],7,-680876936);d=ff(d,a,b,c,k[1],12,-389564586);c=ff(c,d,a,b,k[2],17,606105819);b=ff(b,c,d,a,k[3],22,-1044525330);a=ff(a,b,c,d,k[4],7,-176418897);d=ff(d,a,b,c,k[5],12,1200080426);c=ff(c,d,a,b,k[6],17,-1473231341);b=ff(b,c,d,a,k[7],22,-45705983);a=ff(a,b,c,d,k[8],7,1770035416);d=ff(d,a,b,c,k[9],12,-1958414417);c=ff(c,d,a,b,k[10],17,-42063);b=ff(b,c,d,a,k[11],22,-1990404162);a=ff(a,b,c,d,k[12],7,1804603682);d=ff(d,a,b,c,k[13],12,-40341101);c=ff(c,d,a,b,k[14],17,-1502002290);b=ff(b,c,d,a,k[15],22,1236535329);a=gg(a,b,c,d,k[1],5,-165796510);d=gg(d,a,b,c,k[6],9,-1069501632);c=gg(c,d,a,b,k[11],14,643717713);b=gg(b,c,d,a,k[0],20,-373897302);a=gg(a,b,c,d,k[5],5,-701558691);d=gg(d,a,b,c,k[10],9,38016083);c=gg(c,d,a,b,k[15],14,-660478335);b=gg(b,c,d,a,k[4],20,-405537848);a=gg(a,b,c,d,k[9],5,568446438);d=gg(d,a,b,c,k[14],9,-1019803690);c=gg(c,d,a,b,k[3],14,-187363961);b=gg(b,c,d,a,k[8],20,1163531501);a=gg(a,b,c,d,k[13],5,-1444681467);d=gg(d,a,b,c,k[2],9,-51403784);c=gg(c,d,a,b,k[7],14,1735328473);b=gg(b,c,d,a,k[12],20,-1926607734);a=hh(a,b,c,d,k[5],4,-378558);d=hh(d,a,b,c,k[8],11,-2022574463);c=hh(c,d,a,b,k[11],16,1839030562);b=hh(b,c,d,a,k[14],23,-35309556);a=hh(a,b,c,d,k[1],4,-1530992060);d=hh(d,a,b,c,k[4],11,1272893353);c=hh(c,d,a,b,k[7],16,-155497632);b=hh(b,c,d,a,k[10],23,-1094730640);a=hh(a,b,c,d,k[13],4,681279174);d=hh(d,a,b,c,k[0],11,-358537222);c=hh(c,d,a,b,k[3],16,-722521979);b=hh(b,c,d,a,k[6],23,76029189);a=hh(a,b,c,d,k[9],4,-640364487);d=hh(d,a,b,c,k[12],11,-421815835);c=hh(c,d,a,b,k[15],16,530742520);b=hh(b,c,d,a,k[2],23,-995338651);a=ii(a,b,c,d,k[0],6,-198630844);d=ii(d,a,b,c,k[7],10,1126891415);c=ii(c,d,a,b,k[14],15,-1416354905);b=ii(b,c,d,a,k[5],21,-57434055);a=ii(a,b,c,d,k[12],6,1700485571);d=ii(d,a,b,c,k[3],10,-1894986606);c=ii(c,d,a,b,k[10],15,-1051523);b=ii(b,c,d,a,k[1],21,-2054922799);a=ii(a,b,c,d,k[8],6,1873313359);d=ii(d,a,b,c,k[15],10,-30611744);c=ii(c,d,a,b,k[6],15,-1560198380);b=ii(b,c,d,a,k[13],21,1309151649);a=ii(a,b,c,d,k[4],6,-145523070);d=ii(d,a,b,c,k[11],10,-1120210379);c=ii(c,d,a,b,k[2],15,718787259);b=ii(b,c,d,a,k[9],21,-343485551);x[0]=add32(a,x[0]);x[1]=add32(b,x[1]);x[2]=add32(c,x[2]);x[3]=add32(d,x[3]);}
+  function cmn(q,a,b,x,s,t){a=add32(add32(a,q),add32(x,t));return add32((a<<s)|(a>>>(32-s)),b);}
+  function ff(a,b,c,d,x,s,t){return cmn((b&c)|((~b)&d),a,b,x,s,t);}
+  function gg(a,b,c,d,x,s,t){return cmn((b&d)|(c&(~d)),a,b,x,s,t);}
+  function hh(a,b,c,d,x,s,t){return cmn(b^c^d,a,b,x,s,t);}
+  function ii(a,b,c,d,x,s,t){return cmn(c^(b|(~d)),a,b,x,s,t);}
+  function md51(s){
+    var n=s.length,state=[1732584193,-271733879,-1732584194,271733878],i;
+    for(i=64;i<=n;i+=64) md5cycle(state,md5blk(s.substring(i-64,i)));
+    s=s.substring(i-64);
+    var tail=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+    for(i=0;i<s.length;i++) tail[i>>2]|=s.charCodeAt(i)<<((i%4)<<3);
+    tail[i>>2]|=0x80<<((i%4)<<3);
+    if(i>55){md5cycle(state,tail);for(i=0;i<16;i++) tail[i]=0;}
+    tail[14]=n*8;
+    md5cycle(state,tail);
+    return state;
+  }
+  function md5blk(s){var md5blks=[],i;for(i=0;i<64;i+=4) md5blks[i>>2]=s.charCodeAt(i)+(s.charCodeAt(i+1)<<8)+(s.charCodeAt(i+2)<<16)+(s.charCodeAt(i+3)<<24);return md5blks;}
+  function add32(a,b){return(a+b)&0xFFFFFFFF;}
+  function hex_chr(n){var c='0123456789abcdef'.split(''); return c[(n>>4)&0xF]+c[n&0xF];}
+  function hex(x){for(var i=0;i<x.length;i++) x[i]=hex_chr(x[i]);return x.join('');}
+  function raw(s){return md51(s);}
+  return hex(raw(str));
+}
+
+// 替换酷狗音源的getUrl使用真正的MD5
+const origKugouGetUrl = SOURCES.kugou.getUrl;
+SOURCES.kugou.getUrl = async function(track) {
+  const hash = track._oggHash || track._sqhash || track._hash;
+  if (!hash) return null;
+  const key = md5_real(hash + 'kgcloudv2');
+  const url = `https://trackercdn.kugou.com/i/v2/?key=${key}&hash=${hash}&behavior=play&appid=1005&pid=2&cmd=25`;
+  const data = await fetchJson(url);
+  return data?.url?.[0] || null;
+};
+
+// ==================== App状态 ====================
+let tracks = [];
 let playlist = [];
-let currentIndex = -1;
+let currentIdx = -1;
 let audio = new Audio();
-const DB_NAME = 'MusicPlayerV2';
-const DB_VERSION = 1;
+let activeSource = 'all';
 
-// ===== IndexedDB =====
-function openDB() {
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, DB_VERSION);
-    req.onupgradeneeded = e => {
-      const db = e.target.result;
-      if (!db.objectStoreNames.contains('songs')) {
-        db.createObjectStore('songs', { keyPath: 'id' });
-      }
-    };
-    req.onsuccess = e => resolve(e.target.result);
-    req.onerror = e => reject(e.target.error);
-  });
-}
-
-async function saveSong(id, name, artist, blob) {
-  const db = await openDB();
-  const tx = db.transaction('songs', 'readwrite');
-  tx.objectStore('songs').put({ id, name, artist, blob });
-}
-
-async function deleteSong(id) {
-  const db = await openDB();
-  const tx = db.transaction('songs', 'readwrite');
-  tx.objectStore('songs').delete(id);
-}
-
-async function loadSongs() {
-  const db = await openDB();
-  const tx = db.transaction('songs', 'readonly');
-  const items = await new Promise(resolve => {
-    const req = tx.objectStore('songs').getAll();
-    req.onsuccess = () => resolve(req.result);
-  });
-  playlist = items.map(item => ({
-    id: item.id,
-    name: item.name,
-    artist: item.artist || '未知歌手',
-    blob: item.blob,
-    url: URL.createObjectURL(item.blob)
+// ==================== 搜索 ====================
+async function doSearch() {
+  const q = document.getElementById('searchInput').value.trim();
+  if (!q) return;
+  
+  showLoading(true);
+  document.getElementById('trackList').innerHTML = '';
+  tracks = [];
+  
+  const sources = activeSource === 'all' ? Object.keys(SOURCES) : [activeSource];
+  
+  const results = await Promise.all(sources.map(async src => {
+    try {
+      const items = await SOURCES[src].search(q);
+      return items.map(i => ({...i, source: src}));
+    } catch { return []; }
   }));
+  
+  tracks = results.flat();
+  
+  // 去重 (同标题+歌手)
+  const seen = new Set();
+  tracks = tracks.filter(t => {
+    const key = t.title + '|' + t.artist;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  
+  showLoading(false);
   renderList();
 }
 
-// ===== File Handling =====
-async function addFiles(fileList) {
-  const files = Array.from(fileList).filter(f => f.type.startsWith('audio/') || f.name.match(/\.(mp3|m4a|flac|ogg|wav|wma|aac)$/i));
-  if (files.length === 0) {
-    showToast('未找到音频文件');
+function setSource(src) {
+  activeSource = src;
+  document.querySelectorAll('.source-tags button').forEach(b => b.classList.remove('active'));
+  event?.target?.classList.add('active');
+}
+
+// ==================== 播放 ====================
+async function playTrack(index) {
+  if (index < 0 || index >= tracks.length) return;
+  currentIdx = index;
+  const track = tracks[index];
+  
+  showToast('加载中... ' + SOURCES[track.source].name);
+  
+  const url = await SOURCES[track.source].getUrl(track);
+  if (!url) {
+    showToast('无法播放');
     return;
   }
-
-  for (const file of files) {
-    // Parse filename: "Artist - Title.mp3" or "Title.mp3"
-    let name = file.name.replace(/\.[^.]+$/, '');
-    let artist = '未知歌手';
-    const dash = name.indexOf(' - ');
-    if (dash > 0) {
-      artist = name.substring(0, dash).trim();
-      name = name.substring(dash + 3).trim();
-    }
-
-    const id = Date.now() + Math.random().toString(36);
-    const blob = new Blob([await file.arrayBuffer()], { type: file.type || 'audio/mpeg' });
-
-    await saveSong(id, name, artist, blob);
-    playlist.push({
-      id, name, artist, blob,
-      url: URL.createObjectURL(blob)
-    });
-  }
-
-  renderList();
-  showToast(`已添加 ${files.length} 首歌`);
-}
-
-// ===== Player =====
-function playTrack(index) {
-  if (index < 0 || index >= playlist.length) return;
-  currentIndex = index;
-  const track = playlist[index];
-  audio.src = track.url;
-  audio.play().catch(() => showToast('播放失败'));
+  
+  playlist = [...tracks];
+  audio.src = url;
+  audio.play().catch(() => {});
   updatePlayerUI();
   renderList();
+  showToast('正在播放 ' + SOURCES[track.source].name);
 }
 
-function togglePlay() {
-  if (playlist.length === 0) return;
-  if (currentIndex < 0) { playTrack(0); return; }
+function toggle() {
+  if (!audio.src && tracks.length > 0) { playTrack(0); return; }
   audio.paused ? audio.play() : audio.pause();
   updatePlayBtn();
 }
-
-function nextTrack() {
-  if (playlist.length === 0) return;
-  playTrack((currentIndex + 1) % playlist.length);
-}
-function prevTrack() {
-  if (playlist.length === 0) return;
-  playTrack(currentIndex <= 0 ? playlist.length - 1 : currentIndex - 1);
-}
+function next() { playTrack(currentIdx < tracks.length-1 ? currentIdx+1 : 0); }
+function prev() { playTrack(currentIdx > 0 ? currentIdx-1 : tracks.length-1); }
+function seek(val) { audio.currentTime = (val/100) * (audio.duration||1); }
 
 function updatePlayerUI() {
-  const track = playlist[currentIndex];
-  if (!track) return;
+  const t = tracks[currentIdx];
+  if (!t) return;
   document.getElementById('playerBar').classList.add('active');
-  document.getElementById('pName').textContent = track.name;
-  document.getElementById('pArtist').textContent = track.artist;
+  document.getElementById('pName').textContent = t.title;
+  document.getElementById('pArtist').textContent = t.artist + ' · ' + SOURCES[t.source].name;
   updatePlayBtn();
 }
 function updatePlayBtn() {
   document.getElementById('btnPlay').textContent = audio.paused ? '▶️' : '⏸';
 }
 
-function updateProgress() {
-  if (audio.duration) {
-    document.getElementById('progressBar').value = (audio.currentTime / audio.duration) * 100;
-    document.getElementById('curTime').textContent = formatTime(audio.currentTime);
-  }
-}
-document.getElementById('progressBar').addEventListener('input', e => {
-  audio.currentTime = (e.target.value / 100) * (audio.duration || 1);
-});
-
-// ===== UI =====
+// ==================== UI ====================
 function renderList() {
   const container = document.getElementById('trackList');
-  if (playlist.length === 0) {
-    container.innerHTML = '<div class="empty"><div class="icon">🎶</div><p>点击「添加音乐」选择MP3文件</p><p style="font-size:12px;margin-top:8px">歌曲存储在浏览器中，离线也能听</p></div>';
+  if (tracks.length === 0) {
+    container.innerHTML = '<div class="empty"><div class="icon">🔍</div><p>未找到歌曲</p></div>';
     return;
   }
-  container.innerHTML = playlist.map((t, i) => `
-    <div class="track-item ${i === currentIndex && !audio.paused ? 'playing' : ''}" onclick="playTrack(${i})">
-      <div class="cover">🎵</div>
+  container.innerHTML = tracks.map((t,i) => {
+    const src = SOURCES[t.source];
+    const isPlaying = i === currentIdx && !audio.paused;
+    const dur = formatDur(t.duration);
+    const coverHtml = t.cover ? `<img src="${t.cover}" onerror="this.style.display='none'">` : '🎵';
+    return `<div class="track-item ${isPlaying?'playing':''}" onclick="playTrack(${i})">
+      <div class="cover">${coverHtml}</div>
       <div class="info">
-        <div class="name">${esc(t.name)}</div>
+        <div class="name">${esc(t.title)}</div>
         <div class="artist">${esc(t.artist)}</div>
       </div>
-      <button class="del-btn" onclick="event.stopPropagation();removeTrack(${i})">×</button>
-    </div>
-  `).join('');
+      <span class="dur">${dur}</span>
+      <span class="source-badge" style="background:${src.color}">${src.name}</span>
+    </div>`;
+  }).join('');
 }
 
-async function removeTrack(index) {
-  const track = playlist[index];
-  if (index === currentIndex) {
-    audio.pause();
-    audio.src = '';
-    currentIndex = -1;
-    document.getElementById('playerBar').classList.remove('active');
-  } else if (index < currentIndex) {
-    currentIndex--;
-  }
-  URL.revokeObjectURL(track.url);
-  await deleteSong(track.id);
-  playlist.splice(index, 1);
-  renderList();
-  showToast('已删除');
+function showLoading(show) {
+  document.getElementById('loading').style.display = show ? 'block' : 'none';
 }
-
 function showToast(msg) {
   const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.style.display = 'block';
-  clearTimeout(el._t);
-  el._t = setTimeout(() => el.style.display = 'none', 2000);
+  el.textContent = msg; el.style.display = 'block';
+  clearTimeout(el._t); el._t = setTimeout(() => el.style.display = 'none', 2000);
 }
-
-function formatTime(s) {
-  const m = Math.floor(s / 60);
-  const sec = Math.floor(s % 60);
-  return `${m}:${sec.toString().padStart(2, '0')}`;
+function formatDur(s) {
+  const m = Math.floor(s/60), sec = s%60;
+  return m + ':' + (sec < 10 ? '0' : '') + sec;
 }
 function esc(s) {
   const d = document.createElement('div');
-  d.textContent = s;
-  return d.innerHTML;
+  d.textContent = s; return d.innerHTML;
 }
 
-// ===== Events =====
-audio.addEventListener('timeupdate', updateProgress);
-audio.addEventListener('ended', nextTrack);
+// ==================== 事件 ====================
+audio.addEventListener('timeupdate', () => {
+  if (audio.duration) {
+    document.getElementById('progressBar').value = (audio.currentTime/audio.duration)*100;
+    document.getElementById('curTime').textContent = formatDur(Math.floor(audio.currentTime));
+  }
+});
+audio.addEventListener('loadedmetadata', () => {
+  document.getElementById('totalTime').textContent = formatDur(Math.floor(audio.duration||0));
+});
+audio.addEventListener('ended', next);
 audio.addEventListener('play', updatePlayBtn);
 audio.addEventListener('pause', updatePlayBtn);
-audio.addEventListener('loadedmetadata', () => {
-  document.getElementById('totalTime').textContent = formatTime(audio.duration || 0);
-});
+document.getElementById('searchInput').addEventListener('keydown', e => { if (e.key==='Enter') doSearch(); });
 
-// Media session for lock screen
+// 锁屏控制
 if ('mediaSession' in navigator) {
-  navigator.mediaSession.setActionHandler('play', togglePlay);
-  navigator.mediaSession.setActionHandler('pause', togglePlay);
-  navigator.mediaSession.setActionHandler('previoustrack', prevTrack);
-  navigator.mediaSession.setActionHandler('nexttrack', nextTrack);
+  navigator.mediaSession.setActionHandler('play', toggle);
+  navigator.mediaSession.setActionHandler('pause', toggle);
+  navigator.mediaSession.setActionHandler('previoustrack', prev);
+  navigator.mediaSession.setActionHandler('nexttrack', next);
 }
 
-// ===== Init =====
-(async () => {
+// ==================== 初始化 ====================
+(function init() {
+  // 生成音源标签
+  const tagContainer = document.getElementById('sourceTags');
+  Object.entries(SOURCES).forEach(([id, src]) => {
+    const btn = document.createElement('button');
+    btn.textContent = src.name;
+    btn.onclick = () => setSource(id);
+    btn.id = 'src_' + id;
+    tagContainer.appendChild(btn);
+  });
+  
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').catch(() => {});
   }
-  await loadSongs();
 })();
 </script>
 </body>
